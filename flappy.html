@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Flappy Bird — Режимы в отдельной вкладке</title>
+    <style>
+        * {
+            user-select: none;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            margin: 0;
+            background: #1a472a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: monospace;
+        }
+        #game {
+            width: 100%;
+            max-width: 450px;
+            background: #2b2b2b;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .screen {
+            background: #f9e7c2;
+            padding: 20px;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+        button {
+            background: #4cae4c;
+            color: white;
+            font-size: 24px;
+            padding: 12px 20px;
+            margin: 8px auto;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 90%;
+            display: block;
+            transition: 0.05s linear;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        .small-btn {
+            font-size: 16px;
+            padding: 6px 12px;
+            margin: 0;
+            width: auto;
+            display: inline-block;
+        }
+        .score-box {
+            background: #2e2b26;
+            color: gold;
+            font-size: 28px;
+            padding: 12px;
+            border-radius: 50px;
+            margin: 15px;
+        }
+        .record-box {
+            background: #2e2b26;
+            color: #87CEEB;
+            font-size: 16px;
+            padding: 8px;
+            border-radius: 30px;
+            margin: 10px;
+        }
+        .game-header {
+            background: #1e1e1e;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            align-items: center;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            background: #87CEEB;
+            cursor: pointer;
+        }
+        .shop-item {
+            background: #efdbc1;
+            border-radius: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+        }
+        .item-preview {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+        }
+        .item-info {
+            flex: 1;
+            margin-left: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: left;
+        }
+        .buy-btn {
+            font-size: 13px;
+            padding: 6px 10px;
+            margin: 0;
+            width: auto;
+            background: #2ecc71;
+        }
+        .mode-card {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        .mode-card.selected {
+            background: #27ae60;
+            border: 2px solid gold;
+        }
+        .battle-stats {
+            display: flex;
+            justify-content: space-around;
+            background: #1e1e1e;
+            color: white;
+            padding: 5px;
+            font-size: 14px;
+        }
+        .current-mode {
+            background: #2e2b26;
+            color: #FFD700;
+            padding: 8px;
+            border-radius: 30px;
+            margin: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+<div id="game">
+    <!-- ГЛАВНОЕ МЕНЮ -->
+    <div id="menuScreen" class="screen">
+        <div style="font-size: 50px;">🐤 FLAPPY</div>
+        <div class="score-box">⭐ <span id="coinDisplay">20</span> монет</div>
+        <div class="record-box">🏆 ЛУЧШИЙ СЧЁТ: <span id="bestScore">0</span></div>
+        <div class="current-mode" id="currentModeDisplay">🍃 ЛЁГКИЙ (активен)</div>
+        <button id="playBtn">🚀 ИГРАТЬ</button>
+        <button id="modesBtn">⚡ РЕЖИМЫ</button>
+        <button id="colorsBtn">🎨 ЦВЕТА</button>
+        <button id="breedsBtn">🐦 ПОРОДЫ</button>
+        <p style="margin-top:15px;font-size:12px;">👇 Нажимай на экран, чтобы лететь<br>💰 Каждые 5 труб — +1 монета</p>
+    </div>
+
+    <!-- МАГАЗИН ЦВЕТОВ -->
+    <div id="colorsShop" class="screen hidden">
+        <div style="font-size:28px;">🎨 ЦВЕТА ПТИЦ</div>
+        <div class="score-box">🪙 <span id="colorsCoinDisplay">20</span> монет</div>
+        <div id="colorsList"></div>
+        <button id="backFromColors" class="small-btn" style="width:80%; margin-top:15px;">🏠 НАЗАД</button>
+    </div>
+
+    <!-- МАГАЗИН ПОРОД -->
+    <div id="breedsShop" class="screen hidden">
+        <div style="font-size:28px;">🐦 ПОРОДЫ ПТИЦ</div>
+        <div class="score-box">🪙 <span id="breedsCoinDisplay">20</span> монет</div>
+        <div id="breedsList"></div>
+        <button id="backFromBreeds" class="small-btn" style="width:80%; margin-top:15px;">🏠 НАЗАД</button>
+    </div>
+
+    <!-- РЕЖИМЫ (ВЫБОР) -->
+    <div id="modesScreen" class="screen hidden">
+        <div style="font-size:28px;">🎮 ВЫБОР РЕЖИМА</div>
+        <div id="modeSelectionList"></div>
+        <div class="record-box" style="margin-top:15px;">🏆 ВАШ ПРОГРЕСС:</div>
+        <div id="progressText"></div>
+        <button id="backFromModes" class="small-btn" style="width:80%; margin-top:15px;">🏠 НАЗАД</button>
+    </div>
+
+    <!-- ОБЫЧНАЯ ИГРА -->
+    <div id="gameScreen" class="hidden" style="padding:0">
+        <div class="game-header">
+            <button id="exitGameBtn" class="small-btn">🚪 ВЫХОД</button>
+            <div>🐦 <span id="gameScore">0</span> / <span id="targetScore">30</span></div>
+        </div>
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <div class="record-box" id="goalText" style="margin:10px;"></div>
+    </div>
+
+    <!-- БАТЛ С ИИ -->
+    <div id="battleScreen" class="hidden" style="padding:0">
+        <div class="game-header">
+            <button id="exitBattleBtn" class="small-btn">🚪 ВЫХОД</button>
+            <div class="battle-stats">
+                <span>🐤 ВЫ: <span id="playerScore">0</span></span>
+                <span>🤖 ИИ: <span id="aiScore">0</span></span>
+            </div>
+        </div>
+        <canvas id="battleCanvas" width="400" height="600"></canvas>
+        <div class="record-box" id="battleGoal" style="margin:10px;">⚔️ Пролети дальше ИИ!</div>
+    </div>
+</div>
+
+<script>
+// ========== БОНУС ==========
+function giveBonus(score) {
+    if (score > 0 && score % 5 === 0) {
+        addCoins(1);
+        showMsg(`💰 +1 монета (${score} труб)!`);
+    }
+}
+
+// ========== ДАННЫЕ ==========
+let coins = 20;
+let ownedColors = ['yellow'];
+let currentColor = 'yellow';
+let ownedBreeds = ['sparrow'];
+let currentBreed = 'sparrow';
+let currentModeKey = 'easy';   // 'easy', 'normal', 'hard', 'battle'
+let winsEasy = 0;
+let winsNormal = 0;
+
+function loadWins() {
+    let we = localStorage.getItem('winsEasy'); if(we) winsEasy = parseInt(we);
+    let wn = localStorage.getItem('winsNormal'); if(wn) winsNormal = parseInt(wn);
+}
+function saveWins() {
+    localStorage.setItem('winsEasy', winsEasy);
+    localStorage.setItem('winsNormal', winsNormal);
+}
+function addWin(modeKey) {
+    if (modeKey === 'easy') winsEasy++;
+    else if (modeKey === 'normal') winsNormal++;
+    saveWins();
+}
+
+// Загрузка выбранного режима
+function loadCurrentMode() {
+    let saved = localStorage.getItem('currentMode');
+    if (saved && (saved === 'easy' || saved === 'normal' || saved === 'hard' || saved === 'battle')) {
+        currentModeKey = saved;
+    } else {
+        currentModeKey = 'easy';
+    }
+}
+function saveCurrentMode() {
+    localStorage.setItem('currentMode', currentModeKey);
+}
+
+function loadGame() {
+    let c = localStorage.getItem('coins'); if(c) coins = parseInt(c); else coins = 20;
+    let col = localStorage.getItem('colors'); if(col) ownedColors = JSON.parse(col); else ownedColors = ['yellow'];
+    let curCol = localStorage.getItem('color'); if(curCol && COLORS[curCol]) currentColor = curCol;
+    let br = localStorage.getItem('breeds'); if(br) ownedBreeds = JSON.parse(br); else ownedBreeds = ['sparrow'];
+    let curBr = localStorage.getItem('breed'); if(curBr && BREEDS[curBr]) currentBreed = curBr;
+    loadWins();
+    loadCurrentMode();
+    updateCoins();
+    updateBestDisplay();
+    updateCurrentModeDisplay();
+}
+function saveGame() {
+    localStorage.setItem('coins', coins);
+    localStorage.setItem('colors', JSON.stringify(ownedColors));
+    localStorage.setItem('color', currentColor);
+    localStorage.setItem('breeds', JSON.stringify(ownedBreeds));
+    localStorage.setItem('breed', currentBreed);
+    saveWins();
+    saveCurrentMode();
+}
+function addCoins(a) { if(a>0) { coins += a; saveGame(); updateCoins(); showMsg(`💰 +${a} монет!`); } }
+function updateCoins() {
+    document.getElementById('coinDisplay').innerText = coins;
+    document.getElementById('colorsCoinDisplay').innerText = coins;
+    document.getElementById('breedsCoinDisplay').innerText = coins;
+}
+function updateBestDisplay() {
+    let best = localStorage.getItem('bestScore') || 0;
+    document.getElementById('bestScore').innerText = best;
+}
+function updateBestScore(score) {
+    let best = localStorage.getItem('bestScore') || 0;
+    if(score > best) {
+        localStorage.setItem('bestScore', score);
+        updateBestDisplay();
+        showMsg(`🏆 НОВЫЙ РЕКОРД! ${score} труб!`);
+    }
+}
+function updateCurrentModeDisplay() {
+    let displayMap = {
+        easy: '🍃 ЛЁГКИЙ (активен)',
+        normal: '⚡ СРЕДНИЙ (активен)',
+        hard: '🔥 СЛОЖНЫЙ (активен)',
+        battle: '⚔️ БАТЛ С ИИ (активен)'
+    };
+    document.getElementById('currentModeDisplay').innerText = displayMap[currentModeKey];
+}
+
+// ========== РЕЖИМЫ ==========
+const MODES = {
+    easy:   { name: '🍃 ЛЁГКИЙ', speed: 1.6, jump: -5.0, gravity: 0.24, target: 30, reward: 25 },
+    normal: { name: '⚡ СРЕДНИЙ', speed: 2.2, jump: -5.2, gravity: 0.28, target: 70, reward: 35 },
+    hard:   { name: '🔥 СЛОЖНЫЙ', speed: 3.5, jump: -4.5, gravity: 0.32, target: 1999, reward: 500 }
+};
+
+// ЦВЕТА
+const COLORS = {
+    yellow: { name: '🐥 Жёлтый', color: '#F7D117', sec: '#E68A00', price: 0 },
+    red:    { name: '🔥 Красный', color: '#E34234', sec: '#B22222', price: 10 },
+    blue:   { name: '💧 Синий', color: '#5D9BEC', sec: '#2C5282', price: 20 },
+    green:  { name: '🍃 Зелёный', color: '#6FBF4C', sec: '#2E5A1E', price: 30 },
+    purple: { name: '👾 Фиолетовый', color: '#9B59B6', sec: '#6C3483', price: 40 },
+    orange: { name: '🍊 Оранжевый', color: '#FF8C42', sec: '#CC6B2E', price: 50 },
+    cyan:   { name: '🌀 Голубой', color: '#00CED1', sec: '#008B8B', price: 70 },
+    pink:   { name: '🌸 Розовый', color: '#FF69B4', sec: '#C71585', price: 100 },
+    gold:   { name: '👑 Золотой', color: '#FFD700', sec: '#DAA520', price: 150 }
+};
+
+// ПОРОДЫ
+const BREEDS = {
+    sparrow: { 
+        name: '🐦 Воробей', baseColor: '#B87C4F', secColor: '#9B5E2E', price: 0, 
+        desc: 'Маленький', eyeColor: 'white', beakColor: '#FF8C00', 
+        bodyRadius: 12, beakLen: 7, hasCrest: true, eyeSize: 3.5 
+    },
+    pigeon: { 
+        name: '🕊️ Голубь', baseColor: '#A9C9D0', secColor: '#7D9DA8', price: 50, 
+        desc: 'Мирный', eyeColor: 'white', beakColor: '#FFAA66', 
+        bodyRadius: 13, beakLen: 6, hasCrest: false, eyeSize: 3.5 
+    },
+    falcon: { 
+        name: '🦅 Сокол', baseColor: '#5D3A1A', secColor: '#3E2710', price: 100, 
+        desc: 'Стремительный', eyeColor: '#FFD700', beakColor: '#FF6600', 
+        bodyRadius: 12, beakLen: 9, hasCrest: true, eyeSize: 3 
+    },
+    eagle: { 
+        name: '🦅 Орёл', baseColor: '#4A2F1A', secColor: '#2E1E0F', price: 200, 
+        desc: 'Царь птиц', eyeColor: '#FFAA00', beakColor: '#FF5500', 
+        bodyRadius: 14, beakLen: 11, hasCrest: false, eyeSize: 4 
+    }
+};
+
+function showMsg(m) {
+    let el = document.createElement('div');
+    el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:black;color:gold;padding:8px 16px;border-radius:30px;z-index:1000;font-size:14px;';
+    el.innerText = m;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+}
+
+// ========== МАГАЗИНЫ ==========
+function renderColors() {
+    let container = document.getElementById('colorsList');
+    if(!container) return;
+    container.innerHTML = '';
+    for(let [id, d] of Object.entries(COLORS)) {
+        let owned = ownedColors.includes(id);
+        let active = (currentColor === id);
+        let div = document.createElement('div');
+        div.className = 'shop-item';
+        let prev = document.createElement('div');
+        prev.className = 'item-preview';
+        prev.style.backgroundColor = d.color;
+        if(active) prev.style.boxShadow = '0 0 0 3px gold';
+        let info = document.createElement('div');
+        info.className = 'item-info';
+        info.innerHTML = `<b>${d.name}</b><br><small>${d.price} монет</small>`;
+        let btn = document.createElement('button');
+        btn.className = 'buy-btn';
+        if(!owned) {
+            btn.innerText = `КУПИТЬ (${d.price}💰)`;
+            btn.onclick = () => {
+                if(coins >= d.price) {
+                    coins -= d.price;
+                    ownedColors.push(id);
+                    currentColor = id;
+                    saveGame();
+                    updateCoins();
+                    renderColors();
+                    showMsg(`✅ Куплен и надет цвет ${d.name}!`);
+                } else showMsg(`❌ Нужно ${d.price} монет!`);
+            };
+        } else if(!active) {
+            btn.innerText = 'НАДЕТЬ';
+            btn.style.background = '#3498db';
+            btn.onclick = () => {
+                currentColor = id;
+                saveGame();
+                renderColors();
+                showMsg(`✨ Надет цвет ${d.name}`);
+            };
+        } else {
+            btn.innerText = 'ИСПОЛЬЗУЕТСЯ';
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+        }
+        div.appendChild(prev);
+        div.appendChild(info);
+        div.appendChild(btn);
+        container.appendChild(div);
+    }
+}
+
+function renderBreeds() {
+    let container = document.getElementById('breedsList');
+    if(!container) return;
+    container.innerHTML = '';
+    for(let [id, d] of Object.entries(BREEDS)) {
+        let owned = ownedBreeds.includes(id);
+        let active = (currentBreed === id);
+        let div = document.createElement('div');
+        div.className = 'shop-item';
+        let prev = document.createElement('div');
+        prev.className = 'item-preview';
+        prev.style.backgroundColor = d.baseColor;
+        if(active) prev.style.boxShadow = '0 0 0 3px gold';
+        let info = document.createElement('div');
+        info.className = 'item-info';
+        info.innerHTML = `<b>${d.name}</b><br><small>${d.desc} | ${d.price} монет</small>`;
+        let btn = document.createElement('button');
+        btn.className = 'buy-btn';
+        if(!owned) {
+            btn.innerText = `КУПИТЬ (${d.price}💰)`;
+            btn.onclick = () => {
+                if(coins >= d.price) {
+                    coins -= d.price;
+                    ownedBreeds.push(id);
+                    currentBreed = id;
+                    saveGame();
+                    updateCoins();
+                    renderBreeds();
+                    showMsg(`✅ Куплена и надета порода ${d.name}!`);
+                } else showMsg(`❌ Нужно ${d.price} монет!`);
+            };
+        } else if(!active) {
+            btn.innerText = 'ВЫБРАТЬ';
+            btn.style.background = '#3498db';
+            btn.onclick = () => {
+                currentBreed = id;
+                saveGame();
+                renderBreeds();
+                showMsg(`✨ Выбрана порода ${d.name}`);
+            };
+        } else {
+            btn.innerText = 'ИСПОЛЬЗУЕТСЯ';
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+        }
+        div.appendChild(prev);
+        div.appendChild(info);
+        div.appendChild(btn);
+        container.appendChild(div);
+    }
+}
+
+// ========== ЭКРАН ВЫБОРА РЕЖИМОВ ==========
+function renderModeSelection() {
+    let container = document.getElementById('modeSelectionList');
+    if(!container) return;
+    container.innerHTML = '';
+    // Список всех доступных режимов с условиями
+    const availableModes = [
+        { id: 'easy', name: '🍃 ЛЁГКИЙ', desc: 'Доступен сразу', unlocked: true },
+        { id: 'normal', name: '⚡ СРЕДНИЙ', desc: `Нужно 3 победы в лёгком (у вас ${winsEasy})`, unlocked: winsEasy >= 3 },
+        { id: 'hard', name: '🔥 СЛОЖНЫЙ', desc: `Нужно 5 побед в среднем (у вас ${winsNormal})`, unlocked: winsNormal >= 5 },
+        { id: 'battle', name: '⚔️ БАТЛ С ИИ', desc: `Нужно 15 побед в среднем (у вас ${winsNormal})`, unlocked: winsNormal >= 15 }
+    ];
+    for(let mode of availableModes) {
+        let div = document.createElement('div');
+        div.className = 'mode-card';
+        if(currentModeKey === mode.id) div.classList.add('selected');
+        div.innerHTML = `<div style="font-size:20px;font-weight:bold">${mode.name}</div>
+                         <div>${mode.desc}</div>`;
+        if(!mode.unlocked) {
+            div.style.opacity = '0.5';
+            div.style.cursor = 'not-allowed';
+        } else {
+            div.onclick = () => {
+                currentModeKey = mode.id;
+                saveCurrentMode();
+                updateCurrentModeDisplay();
+                renderModeSelection();
+                showMsg(`🎮 Выбран режим: ${mode.name}`);
+            };
+        }
+        container.appendChild(div);
+    }
+    // прогресс
+    let progDiv = document.getElementById('progressText');
+    progDiv.innerHTML = `🍃 Побед в лёгком: ${winsEasy}<br>
+                         ⚡ Побед в среднем: ${winsNormal}`;
+}
+
+// ========== РИСОВАНИЕ ПТИЦЫ ==========
+function drawBird(ctx, x, y, breed, colorObj, isAI = false) {
+    const r = breed.bodyRadius;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r*0.9, 0, 0, Math.PI*2);
+    ctx.fillStyle = isAI ? '#333' : colorObj.color;
+    ctx.fill();
+    ctx.fillStyle = isAI ? '#FF0000' : breed.eyeColor;
+    ctx.beginPath();
+    ctx.arc(x+5, y-3, breed.eyeSize-0.5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(x+6, y-3.5, 1.8, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(x+5.5, y-4.5, 0.8, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = isAI ? '#888' : breed.beakColor;
+    let beakStartX = x + 9;
+    let beakStartY = y - 2;
+    let beakLen = breed.beakLen;
+    ctx.beginPath();
+    ctx.moveTo(beakStartX, beakStartY);
+    ctx.lineTo(beakStartX + beakLen, beakStartY + 1);
+    ctx.lineTo(beakStartX, beakStartY + 4);
+    ctx.fill();
+    if (breed.hasCrest) {
+        ctx.fillStyle = isAI ? '#555' : breed.secColor;
+        ctx.beginPath();
+        ctx.moveTo(x-2, y-10);
+        ctx.lineTo(x-8, y-18);
+        ctx.lineTo(x, y-14);
+        ctx.fill();
+    } else {
+        ctx.fillStyle = isAI ? '#555' : breed.secColor;
+        ctx.beginPath();
+        ctx.arc(x-3, y-8, 4, 0, Math.PI*2);
+        ctx.fill();
+    }
+    ctx.fillStyle = '#FF8C00';
+    ctx.fillRect(x-6, y+8, 4, 8);
+    ctx.fillRect(x+2, y+8, 4, 8);
+}
+
+// ========== ОБЫЧНАЯ ИГРА ==========
+let canvas = document.getElementById('gameCanvas');
+let ctx = canvas.getContext('2d');
+let gameRunning = false, victory = false, animId = null;
+let birdObj, pipes, gameScore, particles = [];
+let currentGameMode = 'easy';
+let lastBonusScore = 0;
+const W = 400, H = 600;
+
+function addParticle(x, y, color) {
+    particles.push({ x, y, vx: (Math.random()-0.5)*3, vy: (Math.random()-0.5)*3-2, life: 1, color, size: 2+Math.random()*4 });
+}
+function updateParticles() {
+    for(let i=0;i<particles.length;i++) {
+        particles[i].x += particles[i].vx;
+        particles[i].y += particles[i].vy;
+        particles[i].life -= 0.03;
+        if(particles[i].life <= 0) particles.splice(i,1);
+    }
+}
+function drawParticles(ctx) {
+    for(let p of particles) {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function initGame(modeKey) {
+    let m = MODES[modeKey];
+    if(!m) return;
+    document.getElementById('targetScore').innerText = m.target;
+    document.getElementById('goalText').innerHTML = `🎯 Цель: ${m.target} труб | 🎁 Награда: ${m.reward} монет`;
+    let breed = BREEDS[currentBreed];
+    let color = COLORS[currentColor];
+    birdObj = {
+        x: 70, y: H/2, r: 12, vy: 0,
+        gravity: m.gravity, jump: m.jump,
+        breed: breed, color: color
+    };
+    pipes = [];
+    gameScore = 0;
+    particles = [];
+    victory = false;
+    lastBonusScore = 0;
+    document.getElementById('gameScore').innerText = '0';
+    gameRunning = true;
+    for(let i=0;i<3;i++) {
+        let gapY = 80 + Math.random() * (H-200);
+        pipes.push({ x: W+80+i*240, w: 55, gapY: gapY, gapH: 135, counted: false });
+    }
+}
+function checkVictory() {
+    if(gameScore >= MODES[currentGameMode].target && !victory && gameRunning) {
+        victory = true;
+        gameRunning = false;
+        let m = MODES[currentGameMode];
+        addCoins(m.reward);
+        if (currentGameMode === 'easy') addWin('easy');
+        else if (currentGameMode === 'normal') addWin('normal');
+        showMsg(`🏆 ПОБЕДА! +${m.reward} монет! 🏆`);
+        for(let i=0;i<30;i++) addParticle(birdObj.x, birdObj.y, '#FFD700');
+        // обновляем экран режимов (если открыт) и разблокировку
+        renderModeSelection();
+        updateCurrentModeDisplay();
+    }
+}
+function updateGame() {
+    if(!gameRunning) return;
+    let m = MODES[currentGameMode];
+    birdObj.vy += birdObj.gravity;
+    birdObj.y += birdObj.vy;
+    if(birdObj.y + birdObj.r >= H || birdObj.y - birdObj.r <= 0) {
+        gameRunning = false;
+        updateBestScore(gameScore);
+        return;
+    }
+    for(let i=0;i<pipes.length;i++) {
+        let p = pipes[i];
+        p.x -= m.speed;
+        if(p.x + p.w < 0) {
+            pipes.splice(i,1);
+            let gapY = 80 + Math.random() * (H-200);
+            let last = pipes[pipes.length-1];
+            let newX = last ? last.x+240 : W+240;
+            pipes.push({ x: newX, w: 55, gapY: gapY, gapH: 135, counted: false });
+            i--;
+            continue;
+        }
+        let leftB = birdObj.x-birdObj.r, rightB = birdObj.x+birdObj.r;
+        let topB = birdObj.y-birdObj.r, bottomB = birdObj.y+birdObj.r;
+        let leftP = p.x, rightP = p.x+p.w;
+        let gapTop = p.gapY, gapBottom = p.gapY+p.gapH;
+        if(rightB > leftP && leftB < rightP && !(bottomB > gapTop && topB < gapBottom)) {
+            gameRunning = false;
+            updateBestScore(gameScore);
+            return;
+        }
+        if(!p.counted && p.x+p.w < birdObj.x) {
+            p.counted = true;
+            gameScore++;
+            document.getElementById('gameScore').innerText = gameScore;
+            if (gameScore % 5 === 0 && gameScore !== lastBonusScore) {
+                lastBonusScore = gameScore;
+                giveBonus(gameScore);
+                for(let i=0;i<8;i++) addParticle(birdObj.x-8, birdObj.y+3, '#88FF88');
+            }
+            checkVictory();
+        }
+    }
+    updateParticles();
+}
+function drawGame() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.beginPath(); ctx.ellipse(80,50,35,25,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(320,120,40,28,0,0,Math.PI*2); ctx.fill();
+    for(let p of pipes) {
+        ctx.fillStyle = '#2d6a2d';
+        ctx.fillRect(p.x, 0, p.w, p.gapY);
+        let botY = p.gapY+p.gapH;
+        ctx.fillStyle = '#2d6a2d';
+        ctx.fillRect(p.x, botY, p.w, H-botY);
+        ctx.fillStyle = '#8B5A2B';
+        ctx.fillRect(p.x-5, botY, p.w+10, 12);
+    }
+    ctx.fillStyle = '#b97f44';
+    ctx.fillRect(0, H-25, W, 25);
+    drawBird(ctx, birdObj.x, birdObj.y, birdObj.breed, birdObj.color, false);
+    drawParticles(ctx);
+    if(!gameRunning && !victory) {
+        ctx.font = 'bold 24px monospace';
+        ctx.fillStyle = '#a00';
+        ctx.fillText('GAME OVER', W/2-80, H/2);
+    } else if(victory) {
+        ctx.font = 'bold 24px monospace';
+        ctx.fillStyle = 'gold';
+        ctx.fillText('ПОБЕДА!', W/2-60, H/2);
+    }
+}
+function gameLoop() {
+    updateGame();
+    drawGame();
+    animId = requestAnimationFrame(gameLoop);
+}
+function startGame(modeKey) {
+    if(animId) cancelAnimationFrame(animId);
+    currentGameMode = modeKey;
+    initGame(modeKey);
+    gameLoop();
+}
+function flap(e) {
+    if(e) e.preventDefault();
+    if(gameRunning) {
+        let m = MODES[currentGameMode];
+        birdObj.vy = m.jump;
+        let partColor = COLORS[currentColor]?.color || '#FFD700';
+        for(let i=0;i<6;i++) addParticle(birdObj.x-5, birdObj.y+2, partColor);
+    }
+}
+function endGame() {
+    if(animId) cancelAnimationFrame(animId);
+}
+
+// ========== БАТЛ С ИИ (код без изменений, но теперь запускается только если выбран режим battle) ==========
+let battleCanvas = document.getElementById('battleCanvas');
+let battleCtx = battleCanvas.getContext('2d');
+let battleAnimId = null;
+let battleRunning = false;
+let playerBird, aiBird, battlePipes;
+let playerScore = 0, aiScore = 0;
+let playerAlive = true, aiAlive = true;
+let battleParticles = [];
+let battleLastBonusPlayer = 0, battleLastBonusAI = 0;
+let lastAIJumpTime = 0;
+
+function addBattleParticle(x,y,color) {
+    battleParticles.push({ x, y, vx: (Math.random()-0.5)*3, vy: (Math.random()-0.5)*3-2, life: 1, color, size: 2+Math.random()*4 });
+}
+function updateBattleParticles() {
+    for(let i=0;i<battleParticles.length;i++) {
+        battleParticles[i].x += battleParticles[i].vx;
+        battleParticles[i].y += battleParticles[i].vy;
+        battleParticles[i].life -= 0.03;
+        if(battleParticles[i].life <= 0) battleParticles.splice(i,1);
+    }
+}
+function drawBattleParticles() {
+    for(let p of battleParticles) {
+        battleCtx.globalAlpha = p.life;
+        battleCtx.fillStyle = p.color;
+        battleCtx.beginPath();
+        battleCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        battleCtx.fill();
+    }
+    battleCtx.globalAlpha = 1;
+}
+
+function initBattle() {
+    let m = MODES.normal;
+    let playerBreed = BREEDS[currentBreed];
+    let playerColor = COLORS[currentColor];
+    playerBird = {
+        x: 70, y: H/2, r: 12, vy: 0,
+        gravity: m.gravity, jump: m.jump,
+        alive: true,
+        breed: playerBreed, color: playerColor
+    };
+    aiBird = {
+        x: 70, y: H/2, r: 12, vy: 0,
+        gravity: m.gravity, jump: m.jump,
+        alive: true
+    };
+    battlePipes = [];
+    playerScore = 0;
+    aiScore = 0;
+    battleParticles = [];
+    battleLastBonusPlayer = 0;
+    battleLastBonusAI = 0;
+    lastAIJumpTime = 0;
+    document.getElementById('playerScore').innerText = '0';
+    document.getElementById('aiScore').innerText = '0';
+    battleRunning = true;
+    playerAlive = true;
+    aiAlive = true;
+    for(let i=0;i<3;i++) {
+        let gapY = 80 + Math.random() * (H-200);
+        battlePipes.push({ x: W+80+i*240, w: 55, gapY: gapY, gapH: 135, countedP: false, countedAI: false });
+    }
+}
+function updateAI() {
+    if(!aiAlive) return;
+    let m = MODES.normal;
+    let now = Date.now();
+    let nearestPipe = null;
+    for(let p of battlePipes) {
+        if(p.x + p.w > aiBird.x - 15) {
+            nearestPipe = p;
+            break;
+        }
+    }
+    if(nearestPipe) {
+        let gapCenter = nearestPipe.gapY + nearestPipe.gapH/2;
+        let diff = gapCenter - aiBird.y;
+        if(Math.abs(diff) > 10 && (now - lastAIJumpTime) > 400 && aiBird.y > 25) {
+            if (aiBird.y < gapCenter - 5) {
+                // выше центра - не прыгаем
+            } else {
+                aiBird.vy = m.jump;
+                lastAIJumpTime = now;
+                addBattleParticle(aiBird.x-5, aiBird.y+2, '#AAAAAA');
+            }
+        }
+    }
+    aiBird.vy += aiBird.gravity;
+    aiBird.y += aiBird.vy;
+    if(aiBird.y + aiBird.r >= H || aiBird.y - aiBird.r <= 0) {
+        aiAlive = false;
+        aiBird.alive = false;
+    }
+}
+function updateBattle() {
+    if(!battleRunning) return;
+    let m = MODES.normal;
+    if(playerAlive) {
+        playerBird.vy += playerBird.gravity;
+        playerBird.y += playerBird.vy;
+        if(playerBird.y + playerBird.r >= H || playerBird.y - playerBird.r <= 0) {
+            playerAlive = false;
+        }
+    }
+    if(aiAlive) updateAI();
+    for(let i=0;i<battlePipes.length;i++) {
+        let p = battlePipes[i];
+        p.x -= m.speed;
+        if(p.x + p.w < 0) {
+            battlePipes.splice(i,1);
+            let gapY = 80 + Math.random() * (H-200);
+            let last = battlePipes[battlePipes.length-1];
+            let newX = last ? last.x+240 : W+240;
+            battlePipes.push({ x: newX, w: 55, gapY: gapY, gapH: 135, countedP: false, countedAI: false });
+            i--;
+            continue;
+        }
+        if(playerAlive) {
+            let leftB = playerBird.x-playerBird.r, rightB = playerBird.x+playerBird.r;
+            let topB = playerBird.y-playerBird.r, bottomB = playerBird.y+playerBird.r;
+            let leftP = p.x, rightP = p.x+p.w;
+            let gapTop = p.gapY, gapBottom = p.gapY+p.gapH;
+            if(rightB > leftP && leftB < rightP && !(bottomB > gapTop && topB < gapBottom)) {
+                playerAlive = false;
+            }
+        }
+        if(aiAlive) {
+            let leftB = aiBird.x-aiBird.r, rightB = aiBird.x+aiBird.r;
+            let topB = aiBird.y-aiBird.r, bottomB = aiBird.y+aiBird.r;
+            let leftP = p.x, rightP = p.x+p.w;
+            let gapTop = p.gapY, gapBottom = p.gapY+p.gapH;
+            if(rightB > leftP && leftB < rightP && !(bottomB > gapTop && topB < gapBottom)) {
+                aiAlive = false;
+            }
+        }
+        if(playerAlive && !p.countedP && p.x+p.w < playerBird.x) {
+            p.countedP = true;
+            playerScore++;
+            document.getElementById('playerScore').innerText = playerScore;
+            if(playerScore % 5 === 0 && playerScore !== battleLastBonusPlayer) {
+                battleLastBonusPlayer = playerScore;
+                giveBonus(playerScore);
+                for(let i=0;i<8;i++) addBattleParticle(playerBird.x-8, playerBird.y+3, '#88FF88');
+            }
+        }
+        if(aiAlive && !p.countedAI && p.x+p.w < aiBird.x) {
+            p.countedAI = true;
+            aiScore++;
+            document.getElementById('aiScore').innerText = aiScore;
+            if(aiScore % 5 === 0 && aiScore !== battleLastBonusAI) {
+                battleLastBonusAI = aiScore;
+                addCoins(1);
+                showMsg(`🤖 ИИ +1 монета (${aiScore} труб)!`);
+                for(let i=0;i<8;i++) addBattleParticle(aiBird.x-8, aiBird.y+3, '#AAAAAA');
+            }
+        }
+    }
+    updateBattleParticles();
+    if(!playerAlive || !aiAlive) {
+        battleRunning = false;
+        if(playerAlive && !aiAlive) {
+            addCoins(20);
+            showMsg(`⚔️ ПОБЕДА В БАТЛЕ! +20 монет!`);
+        } else if(!playerAlive && aiAlive) {
+            showMsg(`😵 ПОРАЖЕНИЕ... ИИ пролетел дальше!`);
+        } else if(!playerAlive && !aiAlive) {
+            if(playerScore > aiScore) {
+                addCoins(20);
+                showMsg(`⚔️ ПОБЕДА ПО ОЧКАМ! +20 монет!`);
+            } else if(aiScore > playerScore) {
+                showMsg(`😵 ПОРАЖЕНИЕ ПО ОЧКАМ...`);
+            } else {
+                showMsg(`🤝 НИЧЬЯ!`);
+            }
+        }
+        let best = localStorage.getItem('bestScore') || 0;
+        if(playerScore > best) {
+            localStorage.setItem('bestScore', playerScore);
+            updateBestDisplay();
+            showMsg(`🏆 НОВЫЙ РЕКОРД! ${playerScore} труб!`);
+        }
+    }
+}
+function drawBattle() {
+    battleCtx.clearRect(0,0,W,H);
+    battleCtx.fillStyle = '#87CEEB';
+    battleCtx.fillRect(0,0,W,H);
+    battleCtx.fillStyle = 'rgba(255,255,255,0.5)';
+    battleCtx.beginPath(); battleCtx.ellipse(80,50,35,25,0,0,Math.PI*2); battleCtx.fill();
+    battleCtx.beginPath(); battleCtx.ellipse(320,120,40,28,0,0,Math.PI*2); battleCtx.fill();
+    for(let p of battlePipes) {
+        battleCtx.fillStyle = '#2d6a2d';
+        battleCtx.fillRect(p.x, 0, p.w, p.gapY);
+        let botY = p.gapY+p.gapH;
+        battleCtx.fillStyle = '#2d6a2d';
+        battleCtx.fillRect(p.x, botY, p.w, H-botY);
+        battleCtx.fillStyle = '#8B5A2B';
+        battleCtx.fillRect(p.x-5, botY, p.w+10, 12);
+    }
+    battleCtx.fillStyle = '#b97f44';
+    battleCtx.fillRect(0, H-25, W, 25);
+    if(playerAlive) {
+        drawBird(battleCtx, playerBird.x, playerBird.y, playerBird.breed, playerBird.color, false);
+    } else {
+        battleCtx.fillStyle = 'rgba(0,0,0,0.5)';
+        battleCtx.fillRect(playerBird.x-15, playerBird.y-15, 30, 30);
+    }
+    if(aiAlive) {
+        let aiBreed = BREEDS.sparrow;
+        let aiColor = COLORS.gold;
+        drawBird(battleCtx, aiBird.x, aiBird.y, aiBreed, aiColor, true);
+    } else {
+        battleCtx.fillStyle = 'rgba(0,0,0,0.5)';
+        battleCtx.fillRect(aiBird.x-15, aiBird.y-15, 30, 30);
+    }
+    drawBattleParticles();
+    if(!battleRunning) {
+        battleCtx.font = 'bold 20px monospace';
+        battleCtx.fillStyle = '#a00';
+        battleCtx.fillText('БОЙ ОКОНЧЕН', W/2-80, H/2);
+    }
+}
+function battleLoop() {
+    if(battleRunning) updateBattle();
+    drawBattle();
+    battleAnimId = requestAnimationFrame(battleLoop);
+}
+function startBattle() {
+    if(battleAnimId) cancelAnimationFrame(battleAnimId);
+    initBattle();
+    battleLoop();
+}
+function battleFlap(e) {
+    if(e) e.preventDefault();
+    if(battleRunning && playerAlive) {
+        let m = MODES.normal;
+        playerBird.vy = m.jump;
+        let partColor = COLORS[currentColor]?.color || '#FFD700';
+        for(let i=0;i<6;i++) addBattleParticle(playerBird.x-5, playerBird.y+2, partColor);
+    }
+}
+function endBattle() {
+    if(battleAnimId) cancelAnimationFrame(battleAnimId);
+}
+
+// ========== НАВИГАЦИЯ ==========
+const menuDiv = document.getElementById('menuScreen');
+const colorsDiv = document.getElementById('colorsShop');
+const breedsDiv = document.getElementById('breedsShop');
+const modesDivScr = document.getElementById('modesScreen');
+const gameDivScr = document.getElementById('gameScreen');
+const battleDivScr = document.getElementById('battleScreen');
+
+document.getElementById('playBtn').onclick = () => {
+    if (currentModeKey === 'battle') {
+        // проверка разблокировки батла (на всякий случай)
+        if (winsNormal >= 15) {
+            menuDiv.classList.add('hidden');
+            battleDivScr.classList.remove('hidden');
+            startBattle();
+        } else {
+            showMsg(`❌ Батл ещё не разблокирован! Нужно 15 побед в среднем режиме.`);
+        }
+    } else {
+        // обычные режимы easy/normal/hard
+        let mode = currentModeKey;
+        if (mode === 'normal' && winsEasy < 3) {
+            showMsg(`❌ Средний режим ещё не разблокирован! Нужно 3 победы в лёгком.`);
+            return;
+        }
+        if (mode === 'hard' && winsNormal < 5) {
+            showMsg(`❌ Сложный режим ещё не разблокирован! Нужно 5 побед в среднем.`);
+            return;
+        }
+        menuDiv.classList.add('hidden');
+        gameDivScr.classList.remove('hidden');
+        startGame(mode);
+    }
+};
+document.getElementById('modesBtn').onclick = () => {
+    menuDiv.classList.add('hidden');
+    modesDivScr.classList.remove('hidden');
+    renderModeSelection();
+};
+document.getElementById('colorsBtn').onclick = () => {
+    menuDiv.classList.add('hidden');
+    colorsDiv.classList.remove('hidden');
+    renderColors();
+};
+document.getElementById('breedsBtn').onclick = () => {
+    menuDiv.classList.add('hidden');
+    breedsDiv.classList.remove('hidden');
+    renderBreeds();
+};
+document.getElementById('backFromColors').onclick = () => {
+    menuDiv.classList.remove('hidden');
+    colorsDiv.classList.add('hidden');
+};
+document.getElementById('backFromBreeds').onclick = () => {
+    menuDiv.classList.remove('hidden');
+    breedsDiv.classList.add('hidden');
+};
+document.getElementById('backFromModes').onclick = () => {
+    menuDiv.classList.remove('hidden');
+    modesDivScr.classList.add('hidden');
+};
+document.getElementById('exitGameBtn').onclick = () => {
+    endGame();
+    menuDiv.classList.remove('hidden');
+    gameDivScr.classList.add('hidden');
+};
+document.getElementById('exitBattleBtn').onclick = () => {
+    endBattle();
+    menuDiv.classList.remove('hidden');
+    battleDivScr.classList.add('hidden');
+};
+canvas.addEventListener('touchstart', flap);
+canvas.addEventListener('mousedown', flap);
+battleCanvas.addEventListener('touchstart', battleFlap);
+battleCanvas.addEventListener('mousedown', battleFlap);
+
+loadGame();
+renderColors();
+renderBreeds();
+renderModeSelection();
+</script>
+</body>
+</html>
